@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AllenSu & Bird - Colorful Notes</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&family=Zcool+KuaiLe&display=swap');
+
+        :root {
+            --printer-bg: #FFEB3B;
+            --printer-border: #212121;
+            --note-yellow: #fff7d1; /* 默认黄色，会被随机颜色覆盖 */
+        }
+
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f0f4f8;
+            background-image: radial-gradient(#dde1e7 2px, transparent 2px);
+            background-size: 20px 20px;
+            font-family: 'Zcool KuaiLe', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .printer-zone {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            z-index: 10000; 
+            pointer-events: none;
+            padding-bottom: 10px;
+        }
+
+        .paper-feeder {
+            position: absolute;
+            bottom: 140px;
+            width: 260px;
+            height: 300px;
+            z-index: 9000;
+            pointer-events: none; 
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .printer-body {
+            position: relative;
+            width: 94%;
+            max-width: 380px;
+            height: 160px;
+            background: var(--printer-bg);
+            border: 3px solid var(--printer-border);
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+            padding: 10px;
+            z-index: 10001;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .black-slot {
+            position: absolute;
+            top: -6px; left: 20px; right: 20px;
+            height: 12px;
+            background: #333;
+            border-radius: 6px;
+            z-index: 10002;
+        }
+
+        .pixel-card {
+            position: absolute;
+            transform-origin: center center;
+            touch-action: none;
+            cursor: grab;
+            pointer-events: auto;
+        }
+
+        /* 便签风 */
+        .note-card {
+            width: 200px;
+            height: fit-content;
+            min-height: 100px;
+            max-height: 350px;
+            overflow: hidden;
+            background: var(--note-yellow); /* 默认值 */
+            color: #333;
+            padding: 15px 15px 25px 15px;
+            box-shadow: 2px 3px 8px rgba(0,0,0,0.1);
+            font-size: 16px;
+            line-height: 1.5;
+            text-align: justify;
+            border-radius: 2px 2px 15px 2px;
+        }
+
+        /* 拍立得风 */
+        .polaroid-card {
+            width: 220px;
+            background: white;
+            padding: 10px 10px 40px 10px;
+            box-shadow: 3px 4px 10px rgba(0,0,0,0.15);
+            transform: rotate(-2deg);
+        }
+        .polaroid-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #eee;
+            margin-bottom: 5px;
+            pointer-events: none;
+        }
+
+        .card-footer {
+            position: absolute;
+            bottom: 5px; right: 10px;
+            font-size: 12px;
+            color: #999;
+            font-family: 'VT323', monospace;
+        }
+
+        .printing-anim {
+            transition: transform 2s ease-out;
+        }
+
+        .pixel-screen {
+            width: 100%; height: 40px;
+            background: #222; color: #0f0;
+            font-family: 'VT323', monospace; font-size: 18px;
+            border: none; outline: none; padding: 8px; margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .keypad {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 40px 45px; gap: 6px;
+        }
+        .pixel-btn {
+            background: white; border: 2px solid #333;
+            font-family: 'Zcool KuaiLe'; font-size: 14px;
+            cursor: pointer; box-shadow: 2px 2px 0 #333;
+        }
+        .pixel-btn:active { transform: translate(2px,2px); box-shadow: none; }
+        .spacebar { grid-column: span 3; background: #FF9800; color: white; font-size: 18px; }
+
+        .sticker { position: absolute; font-size: 45px; z-index: 5000; filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.1)); cursor: grab; }
+
+        .trash {
+            position: absolute; top: 20px; right: 20px;
+            width: 50px; height: 50px; border-radius: 50%;
+            background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
+            z-index: 20000;
+        }
+        .trash.active { background: #ffcdd2; transform: scale(1.1); }
+        #fileInput { display: none; }
+
+    </style>
+</head>
+<body>
+
+    <div class="trash" id="trashBin">🗑️</div>
+    <div id="canvas"></div>
+
+    <div class="printer-zone">
+        <div class="paper-feeder" id="feeder"></div>
+        <div class="printer-body">
+            <div class="black-slot"></div>
+            <input type="text" id="screen" class="pixel-screen" placeholder="输入文字..." autocomplete="off">
+            <div class="keypad">
+                <button class="pixel-btn" onclick="randomQuote()">📝语录</button>
+                <button class="pixel-btn" onclick="document.getElementById('fileInput').click()">🖼️照片</button>
+                <button class="pixel-btn" onclick="addSticker()">🎀贴纸</button>
+                <button class="pixel-btn spacebar" onclick="startPrint()">PRINT</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" onchange="handleImage(this)">
+
+    <script>
+        // 语录库
+        const quotes = [
+            "只有你可随时随地随意敷衍我", "形容一下自己 ……有苏醒", "你怎么可能逃离我的生活",
+            "因为在荒岛 我和张远还有可能产生爱情的火花", "我们不是组合 我们是家庭 We are family",
+            "爱情 没有我们稳定", "Allen Su This is for you", "法国人都没我俩浪漫",
+            "最怕的三件事 蜘蛛 卡里没钱 苏醒找不到", "All I have is you",
+            "永远和自己老公做兄弟 你看多好", "我就是“醒远forever”行不行",
+            "To Bird, we are getting old.", "春晚念了十多年 歌手念了十多年，圆满了",
+            "老友 损友 soulmate 家人", "Do you want me to kiss you?",
+            "撑兄道弟，永远跟自己老公做兄弟", "张远 就像他的名字，Bird，迟早会变成凤凰",
+            "-苏醒就是我的一半", "苏醒打电话说他在 在等你", "鸟和猴天长地久",
+            "I'll be there for you.", "他怎么可能轻轻地吻!他居然敢那么重的亲我！",
+            "我是妈妈的儿子，苏醒的兄弟", "我跟苏醒是分不开的",
+            "你怎么能逃离我的生活呢？I’m everywhere！", "烘托小温暖，避免断背山",
+            "只有你会叫我“hey bird”", "钱没有苏醒重要", "Hope my friend Bird will soon be this red.",
+            "看的出来吗？我俩是一对", "我最喜欢苏醒可以么?", "让张远感觉到OK就行了",
+            "他是我最好的朋友，兄弟，爱人", "ONLY ONE, 这一位了不得"
+        ];
+
+        const stickers = ["🐵","🐥","🏀","🎤","💖","✨","🎀","💌","🩹","🍭","🍼","🍓","🐾","💍","💫"];
+        
+        // 马卡龙便签颜色库
+        const noteColors = [
+            '#fff7d1', // 经典黄
+            '#ffcdd2', // 浅粉
+            '#e1bee7', // 浅紫
+            '#bbdefb', // 浅蓝
+            '#c8e6c9', // 浅绿
+            '#ffe0b2'  // 浅橙
+        ];
+
+        const screen = document.getElementById('screen');
+        const feeder = document.getElementById('feeder');
+        const canvas = document.getElementById('canvas');
+        const trashBin = document.getElementById('trashBin');
+        
+        let zIndexGlobal = 100; 
+
+        function randomQuote() {
+            screen.value = quotes[Math.floor(Math.random() * quotes.length)];
+        }
+
+        function startPrint() {
+            const text = screen.value.trim();
+            if(!text) return;
+            spawnCard(text, 'note');
+            screen.value = "";
+            screen.blur();
+        }
+
+        function handleImage(input) {
+            if(input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => spawnCard(e.target.result, 'photo');
+                reader.readAsDataURL(input.files[0]);
+            }
+            input.value = "";
+        }
+
+        function addSticker() {
+            const s = document.createElement('div');
+            s.className = 'sticker';
+            s.textContent = stickers[Math.floor(Math.random() * stickers.length)];
+            s.style.left = (window.innerWidth / 2 - 20) + 'px';
+            s.style.top = (window.innerHeight / 2 - 20) + 'px';
+            s.dataset.angle = Math.random() * 40 - 20;
+            s.dataset.scale = 1;
+            
+            updateTransform(s);
+            document.body.appendChild(s); 
+            makeInteractable(s);
+        }
+
+        function spawnCard(content, type) {
+            const card = document.createElement('div');
+            card.className = 'pixel-card ' + (type === 'note' ? 'note-card' : 'polaroid-card');
+            
+            if (type === 'note') {
+                // 随机选择便签背景颜色
+                const randomColor = noteColors[Math.floor(Math.random() * noteColors.length)];
+                card.style.backgroundColor = randomColor;
+                
+                card.innerHTML = `${content}<div class="card-footer">#AllenSu&Bird</div>`;
+            } else {
+                // 拍立得保持白色
+                card.innerHTML = `<img src="${content}"><div class="card-footer">My Best Bro</div>`;
+            }
+            
+            feeder.appendChild(card);
+            
+            const angle = Math.random() * 4 - 2; 
+            card.dataset.angle = angle;
+            card.dataset.scale = 1;
+            card.dataset.x = 0; 
+            card.dataset.y = 0;
+
+            card.style.transform = `translate(0, 120%) rotate(${angle}deg)`;
+            card.offsetHeight;
+
+            requestAnimationFrame(() => {
+                card.classList.add('printing-anim');
+                card.style.transform = `translate(0, -30px) rotate(${angle}deg)`;
+            });
+
+            makeInteractable(card);
+        }
+
+        function updateTransform(el) {
+            if (el.parentElement === feeder) return;
+            const x = parseFloat(el.dataset.x) || 0;
+            const y = parseFloat(el.dataset.y) || 0;
+            const angle = parseFloat(el.dataset.angle) || 0;
+            const scale = parseFloat(el.dataset.scale) || 1;
+            el.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${angle}deg) scale(${scale})`;
+            el.style.left = '0px'; el.style.top = '0px';
+        }
+
+        function makeInteractable(el) {
+            let isDragging = false;
+            let isGesturing = false; 
+            let startX = 0, startY = 0; 
+            let startDist = 0, startAngle = 0; 
+            let initialX = 0, initialY = 0;
+            let initialScale = 1, initialRotation = 0;
+
+            function handleStart(e) {
+                if (e.type !== 'touchstart') e.preventDefault();
+
+                if (el.parentElement === feeder) {
+                    const rect = el.getBoundingClientRect();
+                    el.classList.remove('printing-anim');
+                    el.style.transition = 'none';
+                    canvas.appendChild(el);
+                    el.dataset.x = rect.left;
+                    el.dataset.y = rect.top;
+                    updateTransform(el);
+                }
+
+                zIndexGlobal++;
+                el.style.zIndex = zIndexGlobal;
+
+                if (e.touches && e.touches.length === 2) {
+                    isGesturing = true; isDragging = false;
+                    startDist = getDistance(e.touches[0], e.touches[1]);
+                    startAngle = getAngle(e.touches[0], e.touches[1]);
+                    initialScale = parseFloat(el.dataset.scale) || 1;
+                    initialRotation = parseFloat(el.dataset.angle) || 0;
+                } else {
+                    isDragging = true;
+                    const point = e.touches ? e.touches[0] : e;
+                    startX = point.clientX; startY = point.clientY;
+                    initialX = parseFloat(el.dataset.x) || 0;
+                    initialY = parseFloat(el.dataset.y) || 0;
+                }
+
+                if (e.type === 'touchstart') {
+                    document.addEventListener('touchmove', handleMove, {passive: false});
+                    document.addEventListener('touchend', handleEnd);
+                } else {
+                    document.addEventListener('mousemove', handleMove);
+                    document.addEventListener('mouseup', handleEnd);
+                }
+            }
+
+            function handleMove(e) {
+                if(e.cancelable) e.preventDefault(); 
+
+                if (isGesturing && e.touches && e.touches.length === 2) {
+                    const currDist = getDistance(e.touches[0], e.touches[1]);
+                    const currAngle = getAngle(e.touches[0], e.touches[1]);
+                    if (startDist > 0) {
+                        let scale = initialScale * (currDist / startDist);
+                        scale = Math.max(0.5, Math.min(scale, 3)); 
+                        el.dataset.scale = scale;
+                    }
+                    el.dataset.angle = initialRotation + (currAngle - startAngle);
+                    updateTransform(el);
+                } else if (isDragging) {
+                    const point = e.touches ? e.touches[0] : e;
+                    const dx = point.clientX - startX;
+                    const dy = point.clientY - startY;
+                    el.dataset.x = initialX + dx;
+                    el.dataset.y = initialY + dy;
+                    updateTransform(el);
+                    checkTrash(el);
+                }
+            }
+
+            function handleEnd(e) {
+                if (e.touches && e.touches.length > 0) return;
+                isDragging = false; isGesturing = false;
+                document.removeEventListener('mousemove', handleMove);
+                document.removeEventListener('mouseup', handleEnd);
+                document.removeEventListener('touchmove', handleMove);
+                document.removeEventListener('touchend', handleEnd);
+                if(checkTrash(el, true)) el.remove();
+            }
+
+            el.addEventListener('mousedown', handleStart);
+            el.addEventListener('touchstart', handleStart, {passive: false});
+        }
+
+        function getDistance(t1, t2) { return Math.hypot(t1.pageX - t2.pageX, t1.pageY - t2.pageY); }
+        function getAngle(t1, t2) { return Math.atan2(t2.pageY - t1.pageY, t2.pageX - t1.pageX) * 180 / Math.PI; }
+
+        function checkTrash(el, doDelete = false) {
+            const r1 = el.getBoundingClientRect();
+            const r2 = trashBin.getBoundingClientRect();
+            const overlap = !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
+            if(overlap) {
+                trashBin.classList.add('active');
+                return doDelete;
+            } else {
+                trashBin.classList.remove('active');
+                return false;
+            }
+        }
+    </script>
+</body>
+</html>
