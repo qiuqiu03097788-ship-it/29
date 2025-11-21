@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <!-- 禁用浏览器默认缩放，确保手势只作用于元素 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AllenSu & Bird - Mini MotoPager</title>
     <style>
@@ -31,6 +32,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            touch-action: none; /* 禁止整个页面的默认滚动 */
         }
 
         #canvas {
@@ -52,13 +54,10 @@
             pointer-events: none;
         }
 
-        /* === 缩放包装器 === 
-           将比例改为 0.5 (50%)
-        */
+        /* === 缩放包装器 === */
         .printer-scale-wrapper {
             transform: scale(0.5); 
             transform-origin: bottom center;
-            
             position: relative;
             width: 340px; 
             display: flex;
@@ -185,17 +184,17 @@
             margin-bottom: 8px; position: absolute; top: -15px;
         }
 
-        /* 装饰贴纸 */
+        /* 装饰贴纸 (机器上的) */
         .deco-sticker { position: absolute; font-size: 24px; pointer-events: none; opacity: 0.9; filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.1)); }
         .deco-1 { top: 15px; left: 15px; transform: rotate(-15deg); }
         .deco-2 { top: 15px; right: 15px; transform: rotate(15deg); }
 
 
-        /* 卡片样式 */
+        /* === 可交互卡片与贴纸样式 === */
         .pixel-card {
             position: absolute;
             transform-origin: center center;
-            touch-action: none;
+            touch-action: none; /* 关键：防止移动端触摸时滚动屏幕 */
             cursor: grab;
             pointer-events: auto;
         }
@@ -222,7 +221,17 @@
         .card-footer { position: absolute; bottom: 8px; right: 15px; font-size: 12px; color: #aaa; font-family: 'VT323', monospace; letter-spacing: 1px; }
 
         .printing-anim { transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1); }
-        .sticker { position: absolute; font-size: 45px; z-index: 5000; filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.1)); cursor: grab; }
+        
+        /* 交互贴纸样式 */
+        .sticker { 
+            position: absolute; 
+            font-size: 45px; 
+            z-index: 5000; 
+            filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.1)); 
+            cursor: grab; 
+            touch-action: none; /* 关键：防止移动端触摸时滚动屏幕 */
+            transform-origin: center center;
+        }
         
         .trash {
             position: absolute; top: 20px; right: 20px;
@@ -317,23 +326,25 @@
             "想再次为我最好的兄弟，鼓掌，well done，做得很棒",
             "老友 损友 soulmate 家人",
             "HERE COMES ALLENSU!!",
-            "三个词形容自己:分裂、乖巧、苏醒; 三个词形容自己:眼睛小、唱歌好、有苏醒",
+            "三个词形容自己:眼睛小、唱歌好、有苏醒",
             "Do you want me to kiss you?",
             "借他钱 跟他相处 听他聊天 跟他吃饭 陪他度过一些需要鼓励的寂寞的时光 打开彼此的心扉就会成为好朋友…",
-            "这些年你有做得什么对的事? -和苏醒成为最好的兄弟; 这些年有什么做的后悔的事? -和苏醒成为最好的兄弟",
+            "这些年你有做得什么对的事? -和苏醒成为最好的兄弟",
+            "这些年有什么做的后悔的事? -和苏醒成为最好的兄弟",
             "撑兄道弟，永远跟自己老公做兄弟，你看多好",
             "二十年后，我和苏醒坐在沙发上，一边看着电视，一边嗑着瓜子。",
             "DUDE, JUST GO FOR IT.",
             "你们吵得再凶张远等会儿还不是跟我回一个小区",
-            "SING & LIVE HAPPILY",
+            "SING&LIVE HAPPILY",
             "跟苏醒宅在一起的时候都做些什么事消遣? 与我俩之外的世界连接",
             "张远 就像他的名字，Bird，像一只鸟 但他迟早会变成凤凰",
             "我只是想多一种随时能联系到你的方式...",
-            "-我今天晚上睡哪里? -Of course my place -Why? -Because I love you.",
+            "-我今天晚上睡哪里? -Of course my place -Why?           Because I love you.",
             "-我不知道该怎么评价张远的一半因为评价自己我不太习惯",
             "-苏醒就是我的一半",
-            "我的世界，很简单,只有下午... - 大家好，我是下午。",
-            "-今年如果还有演唱会，我就把它完全撕开 -如果你把它完全撕开 我就拿烟头烫你",
+            "我的世界，很简单 , 只有下午... " ,
+            "大家好，我是下午。",
+            "今年如果还有演唱会，我就把它完全撕开     -如果你把它完全撕开 我就拿烟头烫你",
             "我的愿望就是希望远远今年能上春晚",
             "你不离开苏醒可能会结不了婚哎 -我为什么要离开他?",
             "苏醒打电话说他在 在等你 一见面有聊不完的话题~",
@@ -365,7 +376,7 @@
             "烘托小温暖，避免断背山",
             "我的歌，唱的最好是张远",
             "只有你会叫我“hey bird”",
-            "-所以当年你的比赛心态为什么没有调整好呢 -可能因为对手是你吧",
+            "所以当年你的比赛心态为什么没有调整好呢          可能因为对手是你吧",
             "月亮都困了",
             "钱没有苏醒重要",
             "勉强的慈悲是懦弱 不配赞赏 转折的时期相陪伴 我来站岗",
@@ -376,7 +387,7 @@
             "谢谢你在家人旅行游记中有我出现，虽然是以另一种方式呈现...你说你买房子那天会给我留一个房间，我想说我也一样",
             "我们的故事可以写一本书的，这个书名不如叫做《me & you》",
             "和我保持距离，好好当个偶像",
-            "-那个什么，我就把自己交给你了... -好吧..",
+            "-那个什么，我就把自己交给你了...   好吧..",
             "苏醒！说了多少遍了，家里能不能准备点水！纯净水！",
             "我去参加《创造营2019》，苏醒每周发微博为我拉票",
             "看的出来吗？我俩是一对",
@@ -397,7 +408,7 @@
             "ONLY ONE, 这一位了不得，是我在这个行业内最好的兄弟没有之一"
         ];
 
-        const stickers = ["🐵","🐥","🏀","🎤","💖","✨","🎀","💌","🩹","🍭","🍼","🍓","🐾","💍","💫"];
+        const stickers = ["🐵","🐥","🏀","🎤","💖","✨","🎀","💌","🩹","🍭","🍼","🍓","🐾","💍","💫","🎵","🔥","💯","📷","🐯"];
         
         const noteColors = ['#fff7d1', '#ffcdd2', '#e1bee7', '#bbdefb', '#c8e6c9', '#ffe0b2'];
 
@@ -433,11 +444,14 @@
             const s = document.createElement('div');
             s.className = 'sticker';
             s.textContent = stickers[Math.floor(Math.random() * stickers.length)];
+            // 贴纸初始位置居中
             s.style.left = (window.innerWidth / 2 - 20) + 'px';
-            s.style.top = (window.innerHeight / 2 - 20) + 'px';
-            // 贴纸也稍微缩小一点点，适配小屏幕
+            s.style.top = (window.innerHeight / 2 - 150) + 'px';
+            
             s.dataset.angle = Math.random() * 40 - 20;
-            s.dataset.scale = 0.8; 
+            s.dataset.scale = 1.0; // 贴纸初始大小为 1.0
+            s.dataset.x = 0;
+            s.dataset.y = 0;
             
             updateTransform(s);
             document.body.appendChild(s); 
@@ -460,7 +474,7 @@
             
             const angle = Math.random() * 4 - 2; 
             card.dataset.angle = angle;
-            // === 关键修改：初始缩放设为 0.5，以匹配缩小后的打印机 ===
+            // 刚打印出来时比较小
             card.dataset.scale = 0.5; 
             card.dataset.x = 0; 
             card.dataset.y = 0;
@@ -478,27 +492,39 @@
         }
 
         function updateTransform(el) {
-            // 如果还在出纸口里，不应用JS控制的transform，完全依赖CSS父级缩放
+            // 如果还在出纸口里，不应用JS控制的transform
             if (el.parentElement === feeder) return;
             
             const x = parseFloat(el.dataset.x) || 0;
             const y = parseFloat(el.dataset.y) || 0;
             const angle = parseFloat(el.dataset.angle) || 0;
             const scale = parseFloat(el.dataset.scale) || 1;
+            // 使用 translate3d 确保硬件加速，流畅度更高
             el.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${angle}deg) scale(${scale})`;
-            el.style.left = '0px'; el.style.top = '0px';
         }
 
+        // === 核心交互逻辑：支持单指拖拽，双指缩放/旋转 ===
         function makeInteractable(el) {
             let isDragging = false;
             let isGesturing = false; 
+            
+            // 拖拽起始坐标
             let startX = 0, startY = 0; 
-            let startDist = 0, startAngle = 0; 
             let initialX = 0, initialY = 0;
+
+            // 手势起始状态
+            let startDist = 0, startAngle = 0; 
             let initialScale = 1, initialRotation = 0;
 
             function handleStart(e) {
-                if (e.type !== 'touchstart') e.preventDefault();
+                // 阻止默认事件（防止屏幕滚动），除非我们想允许点击某些东西
+                // 但对于卡片操作，通常需要阻止默认
+                if(e.type === 'touchstart') {
+                    // 这里不完全 preventDefault，否则 click 事件可能不触发（如 trashBin 检测），
+                    // 但我们在 move 时会 preventDefault
+                } else {
+                    e.preventDefault();
+                }
 
                 // 当便签从打印机被拖出来时
                 if (el.parentElement === feeder) {
@@ -507,7 +533,9 @@
                     el.style.transition = 'none';
                     canvas.appendChild(el);
                     
-                    // 保持当前屏幕位置
+                    // 转换为绝对定位，相对于 body/canvas
+                    el.style.left = '0px'; 
+                    el.style.top = '0px';
                     el.dataset.x = rect.left;
                     el.dataset.y = rect.top;
                     
@@ -518,21 +546,28 @@
                 el.style.zIndex = zIndexGlobal;
 
                 if (e.touches && e.touches.length === 2) {
-                    isGesturing = true; isDragging = false;
+                    // === 双指手势开始 ===
+                    isGesturing = true; 
+                    isDragging = false;
+                    
                     startDist = getDistance(e.touches[0], e.touches[1]);
                     startAngle = getAngle(e.touches[0], e.touches[1]);
+                    
                     initialScale = parseFloat(el.dataset.scale) || 1;
                     initialRotation = parseFloat(el.dataset.angle) || 0;
                 } else {
+                    // === 单指拖拽开始 ===
                     isDragging = true;
                     const point = e.touches ? e.touches[0] : e;
-                    startX = point.clientX; startY = point.clientY;
+                    startX = point.clientX; 
+                    startY = point.clientY;
+                    
                     initialX = parseFloat(el.dataset.x) || 0;
                     initialY = parseFloat(el.dataset.y) || 0;
                 }
 
                 if (e.type === 'touchstart') {
-                    document.addEventListener('touchmove', handleMove, {passive: false});
+                    document.addEventListener('touchmove', handleMove, {passive: false}); // passive: false 允许 preventDefault
                     document.addEventListener('touchend', handleEnd);
                 } else {
                     document.addEventListener('mousemove', handleMove);
@@ -541,44 +576,86 @@
             }
 
             function handleMove(e) {
+                // 关键：阻止浏览器滚动，让JS完全接管触摸
                 if(e.cancelable) e.preventDefault(); 
 
+                // 如果触摸点数量变化，重置状态（例如从1指变2指，或者2指变1指）
+                if (e.touches && e.touches.length === 2 && !isGesturing) {
+                     // 动态切换到手势模式
+                    isGesturing = true; isDragging = false;
+                    startDist = getDistance(e.touches[0], e.touches[1]);
+                    startAngle = getAngle(e.touches[0], e.touches[1]);
+                    initialScale = parseFloat(el.dataset.scale) || 1;
+                    initialRotation = parseFloat(el.dataset.angle) || 0;
+                    return;
+                }
+
                 if (isGesturing && e.touches && e.touches.length === 2) {
+                    // === 处理双指缩放和旋转 ===
                     const currDist = getDistance(e.touches[0], e.touches[1]);
                     const currAngle = getAngle(e.touches[0], e.touches[1]);
+                    
                     if (startDist > 0) {
                         let scale = initialScale * (currDist / startDist);
-                        scale = Math.max(0.3, Math.min(scale, 3)); 
+                        // 限制缩放范围，防止太小看不见或太大占满屏
+                        scale = Math.max(0.3, Math.min(scale, 4)); 
                         el.dataset.scale = scale;
                     }
-                    el.dataset.angle = initialRotation + (currAngle - startAngle);
+                    
+                    // 计算旋转角度差
+                    const angleDiff = currAngle - startAngle;
+                    el.dataset.angle = initialRotation + angleDiff;
+                    
                     updateTransform(el);
                 } else if (isDragging) {
+                    // === 处理单指移动 ===
                     const point = e.touches ? e.touches[0] : e;
                     const dx = point.clientX - startX;
                     const dy = point.clientY - startY;
+                    
                     el.dataset.x = initialX + dx;
                     el.dataset.y = initialY + dy;
+                    
                     updateTransform(el);
                     checkTrash(el);
                 }
             }
 
             function handleEnd(e) {
-                if (e.touches && e.touches.length > 0) return;
-                isDragging = false; isGesturing = false;
+                // 检查是否还有手指在屏幕上
+                if (e.touches && e.touches.length > 0) {
+                    // 如果还有手指（比如双指松开了一只），可以尝试切换回单指拖拽逻辑
+                    // 这里简单处理：如果还有手指，重置拖拽起点，避免跳变
+                    if (e.touches.length === 1) {
+                        isGesturing = false;
+                        isDragging = true;
+                        const point = e.touches[0];
+                        startX = point.clientX;
+                        startY = point.clientY;
+                        initialX = parseFloat(el.dataset.x) || 0;
+                        initialY = parseFloat(el.dataset.y) || 0;
+                    }
+                    return;
+                }
+                
+                isDragging = false; 
+                isGesturing = false;
+                
                 document.removeEventListener('mousemove', handleMove);
                 document.removeEventListener('mouseup', handleEnd);
                 document.removeEventListener('touchmove', handleMove);
                 document.removeEventListener('touchend', handleEnd);
+                
                 if(checkTrash(el, true)) el.remove();
             }
 
             el.addEventListener('mousedown', handleStart);
+            // passive: false 对于 touchstart 也很重要
             el.addEventListener('touchstart', handleStart, {passive: false});
         }
 
         function getDistance(t1, t2) { return Math.hypot(t1.pageX - t2.pageX, t1.pageY - t2.pageY); }
+        // 计算角度 (Deg)
         function getAngle(t1, t2) { return Math.atan2(t2.pageY - t1.pageY, t2.pageX - t1.pageX) * 180 / Math.PI; }
 
         function checkTrash(el, doDelete = false) {
