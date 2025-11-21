@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AllenSu & Bird - Colorful Notes</title>
+    <title>AllenSu & Bird - Mini MotoPager</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&family=Zcool+KuaiLe&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=VT323&family=Zcool+KuaiLe&family=Nunito:wght@700;800&display=swap');
 
         :root {
-            --printer-bg: #FFEB3B;
-            --printer-border: #212121;
-            --note-yellow: #fff7d1; /* 默认黄色，会被随机颜色覆盖 */
+            --body-bg: #EAE7DC;
+            --machine-color: #F2EFE4;
+            --machine-shadow: #d1cec5;
+            --screen-bg: #222222;
+            --screen-text: #FFB74D;
+            --accent-orange: #E66A59;
+            --accent-yellow: #FFD54F;
+            --note-yellow: #fff7d1;
         }
 
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -19,9 +24,9 @@
             margin: 0;
             height: 100vh;
             overflow: hidden;
-            background-color: #f0f4f8;
-            background-image: radial-gradient(#dde1e7 2px, transparent 2px);
-            background-size: 20px 20px;
+            background-color: var(--body-bg);
+            background-image: radial-gradient(#ccc 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
             font-family: 'Zcool KuaiLe', sans-serif;
             display: flex;
             flex-direction: column;
@@ -35,23 +40,35 @@
             overflow: hidden;
         }
 
+        /* --- 打印机区域 --- */
         .printer-zone {
             position: fixed;
-            bottom: 0;
+            bottom: 10px;
             width: 100%;
             height: auto;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
+            justify-content: center;
             z-index: 10000; 
             pointer-events: none;
-            padding-bottom: 10px;
+        }
+
+        /* === 缩放包装器 === 
+           将比例改为 0.5 (50%)
+        */
+        .printer-scale-wrapper {
+            transform: scale(0.5); 
+            transform-origin: bottom center;
+            
+            position: relative;
+            width: 340px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .paper-feeder {
             position: absolute;
-            bottom: 140px;
+            bottom: 180px; 
             width: 260px;
             height: 300px;
             z-index: 9000;
@@ -63,29 +80,118 @@
 
         .printer-body {
             position: relative;
-            width: 94%;
-            max-width: 380px;
-            height: 160px;
-            background: var(--printer-bg);
-            border: 3px solid var(--printer-border);
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
-            padding: 10px;
+            width: 340px;
+            height: auto;
+            background: var(--machine-color);
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.15),
+                inset 0 2px 5px rgba(255,255,255,0.8),
+                inset 0 -3px 5px rgba(0,0,0,0.05);
+            border-radius: 30px;
+            padding: 25px;
             z-index: 10001;
             pointer-events: auto;
             display: flex;
             flex-direction: column;
-            border-radius: 12px 12px 0 0;
+            align-items: center;
         }
 
+        /* 品牌Logo */
+        .brand-logo {
+            font-family: 'Nunito', sans-serif;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #999;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .brand-icon { font-size: 14px; }
+
+        /* 出纸口 */
         .black-slot {
             position: absolute;
-            top: -6px; left: 20px; right: 20px;
-            height: 12px;
-            background: #333;
-            border-radius: 6px;
+            top: -12px; 
+            width: 220px;
+            height: 15px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            border-bottom: 2px solid #555;
             z-index: 10002;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
+        /* 屏幕 */
+        .screen-bezel {
+            width: 100%;
+            background: #111;
+            padding: 12px 15px;
+            border-radius: 12px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 2px 0 rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .pixel-screen {
+            width: 100%; height: 40px;
+            background: transparent; color: var(--screen-text);
+            font-family: 'VT323', monospace; font-size: 20px;
+            border: none; outline: none; letter-spacing: 1px;
+            text-shadow: 0 0 2px var(--screen-text);
+        }
+        .pixel-screen::placeholder { color: rgba(255, 183, 77, 0.3); }
+
+        /* 操控面板 */
+        .control-panel {
+            width: 100%; display: flex;
+            justify-content: space-between; align-items: center;
+            padding: 0 5px;
+        }
+
+        .func-keys { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+        .pixel-btn {
+            width: 45px; height: 45px;
+            border: none; border-radius: 12px;
+            cursor: pointer; font-size: 20px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.1s; position: relative;
+            color: #555; font-family: 'Zcool KuaiLe';
+            background: linear-gradient(145deg, #fefefe, #e6e6e6);
+            box-shadow: 3px 3px 6px #ccc, -3px -3px 6px #fff;
+        }
+        .pixel-btn:active { transform: scale(0.95); box-shadow: inset 2px 2px 5px #ccc, inset -2px -2px 5px #fff; }
+        .btn-label { position: absolute; bottom: -18px; font-size: 10px; color: #888; font-family: 'Nunito', sans-serif; font-weight: 700; white-space: nowrap; }
+
+        /* 打印按钮 */
+        .print-group { display: flex; flex-direction: column; align-items: center; position: relative; }
+        .big-print-btn {
+            width: 70px; height: 70px;
+            border-radius: 50%; border: none;
+            background: var(--accent-orange); color: white;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #c0392b, 0 10px 15px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: center;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .big-print-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c0392b, 0 4px 5px rgba(0,0,0,0.2); }
+        .power-light {
+            width: 8px; height: 8px;
+            background: #4CAF50; border-radius: 50%;
+            box-shadow: 0 0 5px #4CAF50;
+            margin-bottom: 8px; position: absolute; top: -15px;
+        }
+
+        /* 装饰贴纸 */
+        .deco-sticker { position: absolute; font-size: 24px; pointer-events: none; opacity: 0.9; filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.1)); }
+        .deco-1 { top: 15px; left: 15px; transform: rotate(-15deg); }
+        .deco-2 { top: 15px; right: 15px; transform: rotate(15deg); }
+
+
+        /* 卡片样式 */
         .pixel-card {
             position: absolute;
             transform-origin: center center;
@@ -94,80 +200,38 @@
             pointer-events: auto;
         }
 
-        /* 便签风 */
         .note-card {
-            width: 200px;
-            height: fit-content;
-            min-height: 100px;
-            max-height: 350px;
-            overflow: hidden;
-            background: var(--note-yellow); /* 默认值 */
-            color: #333;
-            padding: 15px 15px 25px 15px;
-            box-shadow: 2px 3px 8px rgba(0,0,0,0.1);
-            font-size: 16px;
-            line-height: 1.5;
-            text-align: justify;
-            border-radius: 2px 2px 15px 2px;
+            width: 200px; height: fit-content; min-height: 100px; max-height: 350px;
+            overflow: hidden; background: var(--note-yellow); color: #333;
+            padding: 20px 20px 30px 20px; box-shadow: 2px 5px 15px rgba(0,0,0,0.15);
+            font-size: 17px; line-height: 1.6; text-align: justify;
+            border-radius: 2px; font-family: 'Zcool KuaiLe', cursive;
         }
-
-        /* 拍立得风 */
-        .polaroid-card {
-            width: 220px;
-            background: white;
-            padding: 10px 10px 40px 10px;
-            box-shadow: 3px 4px 10px rgba(0,0,0,0.15);
-            transform: rotate(-2deg);
-        }
-        .polaroid-card img {
-            width: 100%;
-            height: auto;
-            display: block;
-            background: #eee;
-            margin-bottom: 5px;
+        
+        .note-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 3h1v1H1V3zm2-2h1v1H3V1z' fill='%23000000' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
             pointer-events: none;
         }
 
-        .card-footer {
-            position: absolute;
-            bottom: 5px; right: 10px;
-            font-size: 12px;
-            color: #999;
-            font-family: 'VT323', monospace;
+        .polaroid-card {
+            width: 220px; background: white; padding: 12px 12px 45px 12px;
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.15); transform: rotate(-2deg); border-radius: 3px;
         }
+        .polaroid-card img { width: 100%; height: auto; display: block; background: #f0f0f0; pointer-events: none; filter: sepia(0.2) contrast(1.1); }
+        .card-footer { position: absolute; bottom: 8px; right: 15px; font-size: 12px; color: #aaa; font-family: 'VT323', monospace; letter-spacing: 1px; }
 
-        .printing-anim {
-            transition: transform 2s ease-out;
-        }
-
-        .pixel-screen {
-            width: 100%; height: 40px;
-            background: #222; color: #0f0;
-            font-family: 'VT323', monospace; font-size: 18px;
-            border: none; outline: none; padding: 8px; margin-bottom: 10px;
-            border-radius: 4px;
-        }
-        .keypad {
-            display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 40px 45px; gap: 6px;
-        }
-        .pixel-btn {
-            background: white; border: 2px solid #333;
-            font-family: 'Zcool KuaiLe'; font-size: 14px;
-            cursor: pointer; box-shadow: 2px 2px 0 #333;
-        }
-        .pixel-btn:active { transform: translate(2px,2px); box-shadow: none; }
-        .spacebar { grid-column: span 3; background: #FF9800; color: white; font-size: 18px; }
-
-        .sticker { position: absolute; font-size: 45px; z-index: 5000; filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.1)); cursor: grab; }
-
+        .printing-anim { transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1); }
+        .sticker { position: absolute; font-size: 45px; z-index: 5000; filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.1)); cursor: grab; }
+        
         .trash {
             position: absolute; top: 20px; right: 20px;
             width: 50px; height: 50px; border-radius: 50%;
-            background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            background: white; box-shadow: 0 5px 15px rgba(0,0,0,0.15);
             display: flex; align-items: center; justify-content: center; font-size: 24px;
-            z-index: 20000;
+            z-index: 20000; transition: transform 0.2s;
         }
-        .trash.active { background: #ffcdd2; transform: scale(1.1); }
+        .trash.active { background: #ffcdd2; transform: scale(1.1); color: #d32f2f; }
         #fileInput { display: none; }
 
     </style>
@@ -178,15 +242,41 @@
     <div id="canvas"></div>
 
     <div class="printer-zone">
-        <div class="paper-feeder" id="feeder"></div>
-        <div class="printer-body">
-            <div class="black-slot"></div>
-            <input type="text" id="screen" class="pixel-screen" placeholder="输入文字..." autocomplete="off">
-            <div class="keypad">
-                <button class="pixel-btn" onclick="randomQuote()">📝语录</button>
-                <button class="pixel-btn" onclick="document.getElementById('fileInput').click()">🖼️照片</button>
-                <button class="pixel-btn" onclick="addSticker()">🎀贴纸</button>
-                <button class="pixel-btn spacebar" onclick="startPrint()">PRINT</button>
+        <div class="printer-scale-wrapper">
+            <div class="paper-feeder" id="feeder"></div>
+            
+            <div class="printer-body">
+                <div class="deco-sticker deco-1">🐵</div>
+                <div class="deco-sticker deco-2">🐥</div>
+
+                <div class="black-slot"></div>
+                
+                <div class="brand-logo">
+                    <span class="brand-icon">⚡</span> DIGITAL NOTE PRINTER
+                </div>
+
+                <div class="screen-bezel">
+                    <input type="text" id="screen" class="pixel-screen" placeholder="TYPE MESSAGE..." autocomplete="off">
+                </div>
+
+                <div class="control-panel">
+                    <div class="func-keys">
+                        <button class="pixel-btn" onclick="randomQuote()" style="color: #5c6bc0;">
+                            📝<span class="btn-label">QUOTE</span>
+                        </button>
+                        <button class="pixel-btn" onclick="document.getElementById('fileInput').click()" style="color: #ef5350;">
+                            🖼️<span class="btn-label">PHOTO</span>
+                        </button>
+                        <button class="pixel-btn" onclick="addSticker()" style="color: #ffa726;">
+                            🎀<span class="btn-label">STICKER</span>
+                        </button>
+                    </div>
+
+                    <div class="print-group">
+                        <div class="power-light"></div>
+                        <button class="big-print-btn" onclick="startPrint()">PRINT</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -194,36 +284,122 @@
     <input type="file" id="fileInput" accept="image/*" onchange="handleImage(this)">
 
     <script>
-        // 语录库
         const quotes = [
-            "只有你可随时随地随意敷衍我", "形容一下自己 ……有苏醒", "你怎么可能逃离我的生活",
-            "因为在荒岛 我和张远还有可能产生爱情的火花", "我们不是组合 我们是家庭 We are family",
-            "爱情 没有我们稳定", "Allen Su This is for you", "法国人都没我俩浪漫",
-            "最怕的三件事 蜘蛛 卡里没钱 苏醒找不到", "All I have is you",
-            "永远和自己老公做兄弟 你看多好", "我就是“醒远forever”行不行",
-            "To Bird, we are getting old.", "春晚念了十多年 歌手念了十多年，圆满了",
-            "老友 损友 soulmate 家人", "Do you want me to kiss you?",
-            "撑兄道弟，永远跟自己老公做兄弟", "张远 就像他的名字，Bird，迟早会变成凤凰",
-            "-苏醒就是我的一半", "苏醒打电话说他在 在等你", "鸟和猴天长地久",
-            "I'll be there for you.", "他怎么可能轻轻地吻!他居然敢那么重的亲我！",
-            "我是妈妈的儿子，苏醒的兄弟", "我跟苏醒是分不开的",
-            "你怎么能逃离我的生活呢？I’m everywhere！", "烘托小温暖，避免断背山",
-            "只有你会叫我“hey bird”", "钱没有苏醒重要", "Hope my friend Bird will soon be this red.",
-            "看的出来吗？我俩是一对", "我最喜欢苏醒可以么?", "让张远感觉到OK就行了",
-            "他是我最好的朋友，兄弟，爱人", "ONLY ONE, 这一位了不得"
+            "感觉你的文案在敷衍我 但只有你可随时随地随意敷衍我",
+            "形容一下自己 ……有苏醒",
+            "你怎么可能逃离我的生活",
+            "山呢 有我了你还看山",
+            "因为在荒岛 我和张远还有可能产生爱情的火花",
+            "我们不是组合 我们是家庭 We are family",
+            "很多人说这是爱情 简直一派胡言 爱情 没有我们稳定",
+            "他在我最不好和最好的时候都在我身边",
+            "我又不是gay ，我只是比较爱苏醒而已",
+            "他就是有才华",
+            "Allen Su This is for you",
+            "法国人都没我俩浪漫",
+            "只有非常善良的孩子才会担心混蛋的命运",
+            "但我觉得那个时候 我的身边应该有张远",
+            "最怕的三件事 蜘蛛 卡里没钱 苏醒找不到",
+            "All I have is you",
+            "不能说形影不离 起码就是彼此充满了对方的生活",
+            "无论仕途多险 心中永远有爱 无论谁走谁留 Allen永远都在",
+            "有时候友情这东西 搞不好比爱情还要刻骨铭心",
+            "自从张远这个答案出现之后 后面所有的答案都是张远",
+            "永远和自己老公做兄弟 你看多好",
+            "遇见对的人，不要怕摊牌",
+            "这如果我都能跟你拉到一块的话，我就发微博认这个组合了",
+            "我官方贴脸开大，我就是“醒远forever”行不行",
+            "我们最终设计的就是我们三个在舞台上经过激烈的操作我跟张远最终在一起了",
+            "我也很开心，Allen今年真的终于把自己特别优秀的一面展现给了大家，终于等到这一天。",
+            "To Bird, we are getting old.",
+            "好听吗？Take it.",
+            "远远，爱你哦",
+            "想再次为我最好的兄弟，鼓掌，well done，做得很棒",
+            "老友 损友 soulmate 家人",
+            "HERE COMES ALLENSU!!",
+            "三个词形容自己:分裂、乖巧、苏醒; 三个词形容自己:眼睛小、唱歌好、有苏醒",
+            "Do you want me to kiss you?",
+            "借他钱 跟他相处 听他聊天 跟他吃饭 陪他度过一些需要鼓励的寂寞的时光 打开彼此的心扉就会成为好朋友…",
+            "这些年你有做得什么对的事? -和苏醒成为最好的兄弟; 这些年有什么做的后悔的事? -和苏醒成为最好的兄弟",
+            "撑兄道弟，永远跟自己老公做兄弟，你看多好",
+            "二十年后，我和苏醒坐在沙发上，一边看着电视，一边嗑着瓜子。",
+            "DUDE, JUST GO FOR IT.",
+            "你们吵得再凶张远等会儿还不是跟我回一个小区",
+            "SING & LIVE HAPPILY",
+            "跟苏醒宅在一起的时候都做些什么事消遣? 与我俩之外的世界连接",
+            "张远 就像他的名字，Bird，像一只鸟 但他迟早会变成凤凰",
+            "我只是想多一种随时能联系到你的方式...",
+            "-我今天晚上睡哪里? -Of course my place -Why? -Because I love you.",
+            "-我不知道该怎么评价张远的一半因为评价自己我不太习惯",
+            "-苏醒就是我的一半",
+            "我的世界，很简单,只有下午... - 大家好，我是下午。",
+            "-今年如果还有演唱会，我就把它完全撕开 -如果你把它完全撕开 我就拿烟头烫你",
+            "我的愿望就是希望远远今年能上春晚",
+            "你不离开苏醒可能会结不了婚哎 -我为什么要离开他?",
+            "苏醒打电话说他在 在等你 一见面有聊不完的话题~",
+            "仿佛看到了我和张远的未来,白色应该是我 毕竟 我比他活泼些..",
+            "我的意思是你多黑都会有人爱你",
+            "就那一秒 就那一刻的默契让你觉得我们彼此是真的很在乎也很想念",
+            "就那一刻我觉得 他就是我一辈子的兄弟",
+            "全世界只有我们...在连接小宇宙",
+            "鸟和猴天长地久",
+            "我要苏醒行了吧",
+            "I'll be there for you.",
+            "人家都说我一个采访要提8次苏醒，我说怎么了，我说那就是他在我最不好的时候和最好的时候，都在我身边",
+            "所以真正的兄弟就那么一两个，比如当亲弟弟一样的张远",
+            "他怎么可能轻轻地吻!他居然敢那么重的亲我！真的想把他踹死!但是这也是他爱我的一种表达，我姑且接受",
+            "I have nothing left to teach you.",
+            "声音优质情感加倍因为远远的这个歌其实在发布之前我已经听过无数遍的demo了",
+            "只要有我在 他身边的人 我来把关",
+            "不管他idol不idol，在我面前，他就是张远",
+            "你有白头发了，我也是",
+            "我是妈妈的儿子，苏醒的兄弟",
+            "你就是因为前十八年的积累和勤奋才有这一次绽放",
+            "我跟苏醒是分不开的",
+            "篮球 张远 梅西",
+            "你怎么能逃离我的生活呢？I’m everywhere！",
+            "如果是别人的话我会考虑，但是如果给他的话我可以无条件送给他",
+            "挺好的，我们后来很多年的生活就是这样子的呀，就是不能说形影不离，但起码就是彼此充满了对方的生活",
+            "我的这位兄弟呢 真的非常热爱舞台 所以呢 我想帮他多留几场 这位兄弟就是苏醒！",
+            "我们一起去了内蒙着日出，一起去了镰仓，一起去了云南，苏醒还给我拍了一组百年孤寂",
+            "烘托小温暖，避免断背山",
+            "我的歌，唱的最好是张远",
+            "只有你会叫我“hey bird”",
+            "-所以当年你的比赛心态为什么没有调整好呢 -可能因为对手是你吧",
+            "月亮都困了",
+            "钱没有苏醒重要",
+            "勉强的慈悲是懦弱 不配赞赏 转折的时期相陪伴 我来站岗",
+            "希望我的好兄弟Allen Su的才华，就算是十二年前的歌，也要被大家听见！",
+            "我很珍惜这九个月，因为每年有三个月的时间他是比我小两岁的",
+            "我俩暗自立下Flag 如果谁又突然红了绝对要给所有人看看什么叫真正的友情",
+            "Hope my friend Bird will soon be this red.",
+            "谢谢你在家人旅行游记中有我出现，虽然是以另一种方式呈现...你说你买房子那天会给我留一个房间，我想说我也一样",
+            "我们的故事可以写一本书的，这个书名不如叫做《me & you》",
+            "和我保持距离，好好当个偶像",
+            "-那个什么，我就把自己交给你了... -好吧..",
+            "苏醒！说了多少遍了，家里能不能准备点水！纯净水！",
+            "我去参加《创造营2019》，苏醒每周发微博为我拉票",
+            "看的出来吗？我俩是一对",
+            "这首歌呢，是我在创造营的时候创作的，也特别感谢我的好兄弟苏醒，陪我一起写了这首歌",
+            "我最喜欢苏醒可以么?",
+            "我从出道到现在，不说大起大落，也是起起落落，最后陪伴在我身边的还是那些朋友，苏醒是最好的一个",
+            "Olivia，你说他怎么还不回来",
+            "我当时那些歌没有人注意的，只有他，只有他知道我在干什么他还为我鸣过不平，他也觉得其实我的东西应该值得被更多人听到",
+            "让张远感觉到OK就行了",
+            "我很幸运，也很骄傲，我有一个这么优秀的兄弟",
+            "我不爱听别人说他的歌不红就不好...",
+            "我相信他的才华总有一天会被看到…反正我不管，我兄弟很赞...",
+            "他是我最好的朋友，他是我最好的兄弟，他是我最好的爱人，最好最爱的那个人",
+            "一会儿要去陪陪Allen Su打篮球，他现在需要人陪嘛对不对",
+            "我谨代表国内说唱歌手，老OG，苏醒同学因为你就代表我了，我就不重复说了",
+            "他是少有的就是那种话多你又不觉得他烦的那种",
+            "我打算等哪一天，我彻底退出这个圈子了，我会躺在一个长椅上，在海边，吹着海风...但我觉得那个时候，身边应该有张远",
+            "ONLY ONE, 这一位了不得，是我在这个行业内最好的兄弟没有之一"
         ];
 
         const stickers = ["🐵","🐥","🏀","🎤","💖","✨","🎀","💌","🩹","🍭","🍼","🍓","🐾","💍","💫"];
         
-        // 马卡龙便签颜色库
-        const noteColors = [
-            '#fff7d1', // 经典黄
-            '#ffcdd2', // 浅粉
-            '#e1bee7', // 浅紫
-            '#bbdefb', // 浅蓝
-            '#c8e6c9', // 浅绿
-            '#ffe0b2'  // 浅橙
-        ];
+        const noteColors = ['#fff7d1', '#ffcdd2', '#e1bee7', '#bbdefb', '#c8e6c9', '#ffe0b2'];
 
         const screen = document.getElementById('screen');
         const feeder = document.getElementById('feeder');
@@ -259,8 +435,9 @@
             s.textContent = stickers[Math.floor(Math.random() * stickers.length)];
             s.style.left = (window.innerWidth / 2 - 20) + 'px';
             s.style.top = (window.innerHeight / 2 - 20) + 'px';
+            // 贴纸也稍微缩小一点点，适配小屏幕
             s.dataset.angle = Math.random() * 40 - 20;
-            s.dataset.scale = 1;
+            s.dataset.scale = 0.8; 
             
             updateTransform(s);
             document.body.appendChild(s); 
@@ -272,13 +449,10 @@
             card.className = 'pixel-card ' + (type === 'note' ? 'note-card' : 'polaroid-card');
             
             if (type === 'note') {
-                // 随机选择便签背景颜色
                 const randomColor = noteColors[Math.floor(Math.random() * noteColors.length)];
                 card.style.backgroundColor = randomColor;
-                
                 card.innerHTML = `${content}<div class="card-footer">#AllenSu&Bird</div>`;
             } else {
-                // 拍立得保持白色
                 card.innerHTML = `<img src="${content}"><div class="card-footer">My Best Bro</div>`;
             }
             
@@ -286,23 +460,27 @@
             
             const angle = Math.random() * 4 - 2; 
             card.dataset.angle = angle;
-            card.dataset.scale = 1;
+            // === 关键修改：初始缩放设为 0.5，以匹配缩小后的打印机 ===
+            card.dataset.scale = 0.5; 
             card.dataset.x = 0; 
             card.dataset.y = 0;
 
-            card.style.transform = `translate(0, 120%) rotate(${angle}deg)`;
-            card.offsetHeight;
+            // 动画位移
+            card.style.transform = `translate(0, 150px) rotate(${angle}deg)`; 
+            card.offsetHeight; 
 
             requestAnimationFrame(() => {
                 card.classList.add('printing-anim');
-                card.style.transform = `translate(0, -30px) rotate(${angle}deg)`;
+                card.style.transform = `translate(0, -80px) rotate(${angle}deg)`;
             });
 
             makeInteractable(card);
         }
 
         function updateTransform(el) {
+            // 如果还在出纸口里，不应用JS控制的transform，完全依赖CSS父级缩放
             if (el.parentElement === feeder) return;
+            
             const x = parseFloat(el.dataset.x) || 0;
             const y = parseFloat(el.dataset.y) || 0;
             const angle = parseFloat(el.dataset.angle) || 0;
@@ -322,13 +500,17 @@
             function handleStart(e) {
                 if (e.type !== 'touchstart') e.preventDefault();
 
+                // 当便签从打印机被拖出来时
                 if (el.parentElement === feeder) {
                     const rect = el.getBoundingClientRect();
                     el.classList.remove('printing-anim');
                     el.style.transition = 'none';
                     canvas.appendChild(el);
+                    
+                    // 保持当前屏幕位置
                     el.dataset.x = rect.left;
                     el.dataset.y = rect.top;
+                    
                     updateTransform(el);
                 }
 
@@ -366,7 +548,7 @@
                     const currAngle = getAngle(e.touches[0], e.touches[1]);
                     if (startDist > 0) {
                         let scale = initialScale * (currDist / startDist);
-                        scale = Math.max(0.5, Math.min(scale, 3)); 
+                        scale = Math.max(0.3, Math.min(scale, 3)); 
                         el.dataset.scale = scale;
                     }
                     el.dataset.angle = initialRotation + (currAngle - startAngle);
